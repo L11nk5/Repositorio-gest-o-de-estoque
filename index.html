@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Estoque</title>
+
+<style>
+body {
+  font-family: Arial;
+  margin: 0;
+  background: #f4f4f4;
+}
+
+header {
+  background: #ff6a00;
+  color: white;
+  padding: 10px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+header h2 {
+  margin: 0;
+  font-size: 18px;
+}
+
+.actions {
+  display: flex;
+  gap: 5px;
+}
+
+.actions button {
+  width: 35px;
+  height: 35px;
+  font-size: 16px;
+  padding: 0;
+}
+
+.container {
+  padding: 10px;
+}
+
+input, textarea, button {
+  width: 100%;
+  margin: 5px 0;
+  padding: 10px;
+  font-size: 16px;
+}
+
+button {
+  background: #ff6a00;
+  color: white;
+  border: none;
+  border-radius: 6px;
+}
+
+.card {
+  background: white;
+  padding: 10px;
+  margin: 10px 0;
+  border-radius: 8px;
+}
+
+.row {
+  display: flex;
+  gap: 5px;
+}
+
+.row button {
+  flex: 1;
+}
+
+img {
+  width: 100%;
+  border-radius: 8px;
+}
+</style>
+</head>
+
+<body>
+
+<header>
+  <h2>📦 Estoque</h2>
+  <div class="actions">
+    <button onclick="exportData()">⬆</button>
+    <button onclick="document.getElementById('importFile').click()">⬇</button>
+  </div>
+</header>
+
+<input type="file" id="importFile" style="display:none" onchange="importData(event)">
+
+<div class="container">
+
+<h3>Cadastrar Produto</h3>
+
+<input id="name" placeholder="Nome do produto">
+<input id="category" placeholder="Categoria (perfume, creme...)">
+<textarea id="desc" placeholder="Descrição (opcional)"></textarea>
+<input id="qty" type="number" placeholder="Quantidade">
+<input id="image" type="file" accept="image/*">
+
+<button onclick="addProduct()">Adicionar</button>
+
+<hr>
+
+<input id="search" placeholder="🔎 Buscar produto..." oninput="render()">
+
+<div id="list"></div>
+
+</div>
+
+<script>
+let db;
+
+const request = indexedDB.open("estoqueDB", 1);
+
+request.onupgradeneeded = e => {
+  db = e.target.result;
+  db.createObjectStore("products", { keyPath: "id", autoIncrement: true });
+};
+
+request.onsuccess = e => {
+  db = e.target.result;
+  render();
+};
+
+function addProduct() {
+  const name = document.getElementById("name").value;
+  const category = document.getElementById("category").value;
+  const desc = document.getElementById("desc").value;
+  const qty = parseInt(document.getElementById("qty").value);
+  const file = document.getElementById("image").files[0];
+
+  if (!name || !qty) return alert("Preencha nome e quantidade");
+
+  const reader = new FileReader();
+
+  reader.onload = function () {
+    const tx = db.transaction("products", "readwrite");
+    const store = tx.objectStore("products");
+
+    store.add({
+      name,
+      category,
+      desc,
+      qty,
+      image: reader.result
+    });
+
+    render();
+  };
+
+  if (file) reader.readAsDataURL(file);
+  else reader.onload();
+}
+
+function render() {
+  const search = document.getElementById("search").value.toLowerCase();
+
+  const tx = db.transaction("products", "readwrite");
+  const store = tx.objectStore("products");
+
+  const req = store.getAll();
+
+  req.onsuccess = () => {
+    const list = document.getElementById("list");
+    list.innerHTML = "";
+
+    let filtered = req.result.filter(p =>
+      p.name.toLowerCase().includes(search)
+    );
+
+    if (filtered.length === 0) {
+      list.innerHTML = "<p>❌ não há estoque</p>";
+      return;
+    }
+
+    filtered.forEach(p => {
+      if (p.qty <= 0) {
+        store.delete(p.id);
+        return;
+      }
+
+      list.innerHTML += `
+        <div class="card">
+          ${p.image ? `<img src="${p.image}">` : ""}
+          <b>${p.name}</b>
+          <p>${p.category || ""}</p>
+          <p>${p.desc || ""}</p>
+          <p><b>Qtd:</b> ${p.qty}</p>
+
+          <div class="row">
+            <button onclick="updateQty(${p.id}, 1)">+1</button>
+            <button onclick="updateQty(${p.id}, -1)">-1</button>
+          </div>
+        </div>
+      `;
+    });
+  };
+}
+
+function updateQty(id, change) {
+  const tx = db.transaction("products", "readwrite");
+  const store = tx.objectStore("products");
+
+  const req = store.get(id);
+
+  req.onsuccess = () => {
+    const p = req.result;
+    p.qty += change;
+
+    if (p.qty <= 0) {
+      store.delete(id);
+    } else {
+      store.put(p);
+    }
+
+    render();
+  };
+}
+
+function exportData() {
+  const tx = db.transaction("products", "readonly");
+  const store = tx.objectStore("products");
+
+  const req = store.getAll();
+
+  req.onsuccess = () => {
+    const data = JSON.stringify(req.result, null, 2);
+    const blob = new Blob([data], { type: "application/json" });
+
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(blob);
+    a.download = "estoque.json";
+    a.click();
+  };
+}
+
+function importData(event) {
+  const file = event.target.files[0];
+  const reader = new FileReader();
+
+  reader.onload = e => {
+    const data = JSON.parse(e.target.result);
+
+    const tx = db.transaction("products", "readwrite");
+    const store = tx.objectStore("products");
+
+    store.clear();
+
+    data.forEach(p => store.add(p));
+
+    render();
+    alert("Estoque importado!");
+  };
+
+  reader.readAsText(file);
+}
+</script>
+
+</body>
+</html>
