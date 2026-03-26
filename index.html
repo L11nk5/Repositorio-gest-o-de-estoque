@@ -1,17 +1,27 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-<link rel="icon" href="./logo.png" type="image/png">
-<link rel="shortcut icon" href="./logo.png">
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Estoque</title>
 
+<!-- PWA -->
 <link rel="manifest" href="manifest.json">
 <meta name="theme-color" content="#ff6a00">
 
+<!-- Ícone iPhone -->
+<link rel="apple-touch-icon" sizes="180x180" href="logo.png">
+
+<!-- Favicon -->
+<link rel="icon" href="./logo.png" type="image/png">
+<link rel="shortcut icon" href="./logo.png">
+
 <style>
-body { font-family: Arial; margin: 0; background: #f4f4f4; }
+body {
+  font-family: Arial;
+  margin: 0;
+  background: #f4f4f4;
+}
 
 .logo-container {
   display: flex;
@@ -20,22 +30,26 @@ body { font-family: Arial; margin: 0; background: #f4f4f4; }
   background: white;
 }
 
-.logo-container img { max-width: 180px; }
+.logo-container img {
+  max-width: 180px;
+}
 
 header {
   background: #ff6a00;
   color: white;
   padding: 10px;
-  display: flex;
-  justify-content: space-between;
+  text-align: center;
 }
 
-.container { padding: 10px; }
+.container {
+  padding: 10px;
+}
 
-input, textarea, button {
+input, button {
   width: 100%;
   margin: 5px 0;
   padding: 10px;
+  font-size: 16px;
 }
 
 button {
@@ -52,14 +66,17 @@ button {
   border-radius: 8px;
 }
 
-img { width: 100%; border-radius: 8px; }
+img {
+  width: 100%;
+  border-radius: 8px;
+}
 </style>
 </head>
 
 <body>
 
 <div class="logo-container">
-  <img src="./logo.png">
+  <img src="./logo.png" alt="Logo">
 </div>
 
 <header>
@@ -92,7 +109,7 @@ function add() {
   const qty = parseInt(document.getElementById("qty").value);
   const file = document.getElementById("image").files[0];
 
-  if (!name || !qty) return alert("Preencha");
+  if (!name || !qty) return alert("Preencha os campos");
 
   const reader = new FileReader();
 
@@ -114,6 +131,11 @@ function add() {
 function render() {
   const list = document.getElementById("list");
   list.innerHTML = "";
+
+  if (db.length === 0) {
+    list.innerHTML = "<p>Sem produtos no estoque</p>";
+    return;
+  }
 
   db.forEach(p => {
     list.innerHTML += `
