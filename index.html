@@ -5,111 +5,149 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Estoque</title>
 
-<!-- PWA -->
 <link rel="manifest" href="manifest.json">
 <meta name="theme-color" content="#ff6a00">
 
-<!-- Ícone iPhone -->
 <link rel="apple-touch-icon" sizes="180x180" href="logo.png">
-
-<!-- Favicon -->
-<link rel="icon" href="./logo.png" type="image/png">
-<link rel="shortcut icon" href="./logo.png">
+<link rel="icon" href="logo.png">
 
 <style>
 body {
   font-family: Arial;
   margin: 0;
-  background: #f4f4f4;
+  background: #f5f6fa;
 }
 
-.logo-container {
-  display: flex;
-  justify-content: center;
-  padding: 15px;
-  background: white;
-}
-
-.logo-container img {
-  max-width: 180px;
-}
-
+/* HEADER */
 header {
   background: #ff6a00;
   color: white;
-  padding: 10px;
+  padding: 15px;
   text-align: center;
 }
 
-.container {
-  padding: 10px;
+/* LISTA */
+.list-item {
+  display: flex;
+  align-items: center;
+  background: white;
+  margin: 10px;
+  padding: 12px;
+  border-radius: 14px;
+  box-shadow: 0 3px 10px rgba(0,0,0,0.08);
+  transition: 0.2s;
+}
+
+.list-item:active {
+  transform: scale(0.97);
+}
+
+.list-item img {
+  width: 55px;
+  height: 55px;
+  border-radius: 10px;
+  object-fit: cover;
+}
+
+.info {
+  flex: 1;
+  padding: 0 10px;
+}
+
+.info p {
+  margin: 0;
+  color: #666;
+}
+
+/* BOTÕES + - */
+.qtd-buttons {
+  display: flex;
+  flex-direction: column;
+}
+
+.qtd-buttons button {
+  width: 36px;
+  height: 30px;
+  margin: 2px 0;
+  border: none;
+  background: #ff6a00;
+  color: white;
+  border-radius: 6px;
+}
+
+/* FAB */
+.fab {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  background: #ff6a00;
+  color: white;
+  font-size: 28px;
+  border: none;
+  box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+}
+
+/* MODAL */
+.modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  display: none;
+  background: rgba(0,0,0,0.6);
+  justify-content: center;
+  align-items: center;
+}
+
+.modal-content {
+  background: white;
+  width: 90%;
+  padding: 20px;
+  border-radius: 16px;
+  animation: fadeIn 0.2s ease;
+}
+
+@keyframes fadeIn {
+  from {opacity:0; transform:scale(0.9);}
+  to {opacity:1; transform:scale(1);}
 }
 
 input, button {
   width: 100%;
+  padding: 10px;
   margin: 5px 0;
-  padding: 10px;
-  font-size: 16px;
-}
-
-button {
-  background: #ff6a00;
-  color: white;
-  border: none;
-  border-radius: 6px;
-}
-
-.card {
-  background: white;
-  padding: 10px;
-  margin: 10px 0;
-  border-radius: 8px;
-}
-
-img {
-  width: 100%;
-  border-radius: 8px;
-}
-
-/* NOVO - botões de quantidade */
-.qtd-control {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 10px;
-  margin: 10px 0;
-}
-
-.qtd-control button {
-  width: 40px;
-  padding: 5px;
-  font-size: 18px;
 }
 </style>
 </head>
 
 <body>
 
-<div class="logo-container">
-  <img src="./logo.png" alt="Logo">
-</div>
-
-<header>
-  <h3>📦 Estoque</h3>
-</header>
-
-<div class="container">
-
-<input id="name" placeholder="Nome do produto">
-<input id="qty" type="number" placeholder="Quantidade">
-<input id="image" type="file">
-
-<button onclick="add()">Adicionar</button>
-
-<hr>
+<header>📦 Estoque</header>
 
 <div id="list"></div>
 
+<button class="fab" onclick="openAdd()">+</button>
+
+<!-- MODAL ADD -->
+<div id="addModal" class="modal" onclick="closeAdd()">
+  <div class="modal-content" onclick="event.stopPropagation()">
+    <h3>Novo Produto</h3>
+    <input id="name" placeholder="Nome">
+    <input id="qty" type="number" placeholder="Quantidade">
+    <input id="image" type="file">
+    <button onclick="add()">Salvar</button>
+  </div>
+</div>
+
+<!-- MODAL DETALHE -->
+<div id="modal" class="modal" onclick="closeModal()">
+  <div class="modal-content" onclick="event.stopPropagation()">
+    <div id="modalContent"></div>
+  </div>
 </div>
 
 <script>
@@ -119,12 +157,20 @@ function save() {
   localStorage.setItem("estoque", JSON.stringify(db));
 }
 
+function openAdd() {
+  document.getElementById("addModal").style.display = "flex";
+}
+
+function closeAdd() {
+  document.getElementById("addModal").style.display = "none";
+}
+
 function add() {
   const name = document.getElementById("name").value;
   const qty = parseInt(document.getElementById("qty").value);
   const file = document.getElementById("image").files[0];
 
-  if (!name || !qty) return alert("Preencha os campos");
+  if (!name || !qty) return alert("Preencha");
 
   const reader = new FileReader();
 
@@ -137,6 +183,7 @@ function add() {
     });
     save();
     render();
+    closeAdd();
   };
 
   if (file) reader.readAsDataURL(file);
@@ -147,24 +194,20 @@ function render() {
   const list = document.getElementById("list");
   list.innerHTML = "";
 
-  if (db.length === 0) {
-    list.innerHTML = "<p>Sem produtos no estoque</p>";
-    return;
-  }
-
   db.forEach(p => {
     list.innerHTML += `
-      <div class="card">
+      <div class="list-item" onclick="openModal(${p.id})">
         ${p.image ? `<img src="${p.image}">` : ""}
-        <b>${p.name}</b>
 
-        <div class="qtd-control">
-          <button onclick="decrease(${p.id})">➖</button>
-          <span><b>${p.qty}</b></span>
-          <button onclick="increase(${p.id})">➕</button>
+        <div class="info">
+          <b>${p.name}</b>
+          <p>Qtd: ${p.qty}</p>
         </div>
 
-        <button onclick="removeItem(${p.id})">Remover</button>
+        <div class="qtd-buttons">
+          <button onclick="event.stopPropagation(); increase(${p.id})">+</button>
+          <button onclick="event.stopPropagation(); decrease(${p.id})">-</button>
+        </div>
       </div>
     `;
   });
@@ -192,6 +235,38 @@ function removeItem(id) {
   db = db.filter(p => p.id !== id);
   save();
   render();
+}
+
+function openModal(id) {
+  const p = db.find(i => i.id === id);
+
+  document.getElementById("modal").style.display = "flex";
+
+  document.getElementById("modalContent").innerHTML = `
+    ${p.image ? `<img src="${p.image}" style="width:100%">` : ""}
+    <h2>${p.name}</h2>
+    <p>Qtd: ${p.qty}</p>
+
+    <button onclick="increase(${p.id}); openModal(${p.id})">+</button>
+    <button onclick="decrease(${p.id}); openModal(${p.id})">-</button>
+
+    <hr>
+
+    <button onclick="confirmDelete(${p.id})" style="background:red;color:white;">
+      Deletar
+    </button>
+  `;
+}
+
+function closeModal() {
+  document.getElementById("modal").style.display = "none";
+}
+
+function confirmDelete(id) {
+  if (confirm("Tem certeza que deseja excluir?")) {
+    removeItem(id);
+    closeModal();
+  }
 }
 
 render();
