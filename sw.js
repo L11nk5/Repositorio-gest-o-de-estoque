@@ -1,6 +1,9 @@
-const CACHE = "estoque-v8";
+const CACHE = "estoque-v9";
 
+/* INSTALL */
 self.addEventListener("install", event => {
+  self.skipWaiting();
+
   event.waitUntil(
     caches.open(CACHE).then(cache => {
       return cache.addAll([
@@ -13,10 +16,32 @@ self.addEventListener("install", event => {
   );
 });
 
+/* ACTIVATE */
+self.addEventListener("activate", event => {
+  event.waitUntil(
+    caches.keys().then(keys => {
+      return Promise.all(
+        keys.map(key => {
+          if (key !== CACHE) {
+            return caches.delete(key);
+          }
+        })
+      );
+    })
+  );
+
+  self.clients.claim();
+});
+
+/* FETCH */
 self.addEventListener("fetch", event => {
   event.respondWith(
-    caches.match(event.request).then(response => {
-      return response || fetch(event.request);
-    })
+    fetch(event.request)
+      .then(response => {
+        return response;
+      })
+      .catch(() => {
+        return caches.match(event.request);
+      })
   );
 });
