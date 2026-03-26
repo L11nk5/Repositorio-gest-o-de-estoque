@@ -20,4 +20,3 @@ self.addEventListener("fetch", event => {
     })
   );
 });
-const CACHE = "estoque-v5";
