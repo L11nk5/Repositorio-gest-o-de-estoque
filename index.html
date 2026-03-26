@@ -12,7 +12,11 @@
 <link rel="icon" href="logo.png">
 
 <style>
-body {
+body
+  <div class="logo-container">
+  <img src="./logo.png">
+</div>
+  {
   font-family: Arial;
   margin: 0;
   background: #f5f6fa;
@@ -106,14 +110,11 @@ header {
 .modal-content {
   background: white;
   width: 90%;
+  max-height: 80vh; /* 🔥 limita altura */
+  overflow-y: auto; /* 🔥 permite rolar */
   padding: 20px;
   border-radius: 16px;
   animation: fadeIn 0.2s ease;
-}
-
-@keyframes fadeIn {
-  from {opacity:0; transform:scale(0.9);}
-  to {opacity:1; transform:scale(1);}
 }
 
 input, button {
@@ -243,17 +244,18 @@ function openModal(id) {
   document.getElementById("modal").style.display = "flex";
 
   document.getElementById("modalContent").innerHTML = `
-    ${p.image ? `<img src="${p.image}" style="width:100%">` : ""}
+    ${p.image ? `<img src="${p.image}" style="width:100%; border-radius:10px;">` : ""}
+
     <h2>${p.name}</h2>
-    <p>Qtd: ${p.qty}</p>
 
-    <button onclick="increase(${p.id}); openModal(${p.id})">+</button>
-    <button onclick="decrease(${p.id}); openModal(${p.id})">-</button>
+    <div style="display:flex; justify-content:center; gap:10px; margin:15px 0;">
+      <button onclick="increase(${p.id}); openModal(${p.id})">➕</button>
+      <span style="font-size:20px;"><b>${p.qty}</b></span>
+      <button onclick="decrease(${p.id}); openModal(${p.id})">➖</button>
+    </div>
 
-    <hr>
-
-    <button onclick="confirmDelete(${p.id})" style="background:red;color:white;">
-      Deletar
+    <button onclick="confirmDelete(${p.id})" style="background:red; color:white;">
+      🗑 Deletar
     </button>
   `;
 }
