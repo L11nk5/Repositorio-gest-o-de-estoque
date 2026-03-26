@@ -1,4 +1,4 @@
-const CACHE = "estoque-v3";
+const CACHE = "estoque-v6";
 
 self.addEventListener("install", event => {
   event.waitUntil(
