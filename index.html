@@ -13,42 +13,49 @@
 
 <style>
 body {
-  font-family: Arial;
   margin: 0;
-  background: #f5f6fa;
+  font-family: Arial;
+  background: #f4f6f8;
 }
 
 /* LOGO */
 .logo-container {
-  display: flex;
-  justify-content: center;
-  padding: 10px;
+  text-align: center;
   background: white;
+  padding: 10px;
 }
 
 .logo-container img {
-  max-width: 140px;
+  max-width: 120px;
 }
 
 /* HEADER */
-header {
+.header {
   background: #ff6a00;
   color: white;
-  padding: 15px;
+  padding: 10px;
   display: flex;
   justify-content: space-between;
   align-items: center;
 }
 
 /* MENU */
-.menu-box {
+.menu {
   position: relative;
 }
 
-.menu-dropdown {
+.menu-btn {
+  background: none;
+  border: none;
+  color: white;
+  font-size: 20px;
+}
+
+.menu-content {
   display: none;
   position: absolute;
   right: 0;
+  top: 30px;
   background: white;
   color: black;
   border-radius: 8px;
@@ -56,12 +63,28 @@ header {
   overflow: hidden;
 }
 
-.menu-dropdown div {
+.menu-content button {
+  width: 100%;
+  border: none;
+  padding: 10px;
+  background: white;
+}
+
+.menu-content button:hover {
+  background: #eee;
+}
+
+/* DASHBOARD */
+.dashboard {
   padding: 10px;
 }
 
-.menu-dropdown div:active {
-  background: #eee;
+.card-info {
+  background: white;
+  padding: 15px;
+  border-radius: 12px;
+  text-align: center;
+  margin-bottom: 10px;
 }
 
 /* LISTA */
@@ -70,15 +93,15 @@ header {
   align-items: center;
   background: white;
   margin: 10px;
-  padding: 12px;
-  border-radius: 14px;
-  box-shadow: 0 3px 10px rgba(0,0,0,0.08);
+  padding: 10px;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.08);
 }
 
 .list-item img {
-  width: 55px;
-  height: 55px;
-  border-radius: 10px;
+  width: 50px;
+  height: 50px;
+  border-radius: 8px;
   object-fit: cover;
 }
 
@@ -87,24 +110,19 @@ header {
   padding: 0 10px;
 }
 
-.info p {
-  margin: 0;
-  color: #666;
-}
-
 .qtd-buttons {
   display: flex;
   flex-direction: column;
 }
 
 .qtd-buttons button {
-  width: 36px;
-  height: 30px;
-  margin: 2px 0;
-  border: none;
   background: #ff6a00;
   color: white;
-  border-radius: 6px;
+  border: none;
+  margin: 2px 0;
+  border-radius: 5px;
+  width: 35px;
+  height: 30px;
 }
 
 /* FAB */
@@ -112,13 +130,13 @@ header {
   position: fixed;
   bottom: 20px;
   right: 20px;
-  width: 60px;
-  height: 60px;
-  border-radius: 50%;
   background: #ff6a00;
   color: white;
   font-size: 28px;
   border: none;
+  border-radius: 50%;
+  width: 60px;
+  height: 60px;
 }
 
 /* MODAL */
@@ -129,7 +147,7 @@ header {
   width: 100%;
   height: 100%;
   display: none;
-  background: rgba(0,0,0,0.6);
+  background: rgba(0,0,0,0.5);
   justify-content: center;
   align-items: center;
 }
@@ -137,45 +155,49 @@ header {
 .modal-content {
   background: white;
   width: 90%;
-  max-height: 80vh;
-  overflow-y: auto;
+  max-width: 400px;
+  border-radius: 15px;
   padding: 20px;
-  border-radius: 16px;
 }
 
-input, button {
+input {
   width: 100%;
   padding: 10px;
   margin: 5px 0;
+}
+
+button {
+  padding: 10px;
 }
 </style>
 </head>
 
 <body>
 
-<!-- LOGO -->
 <div class="logo-container">
-  <img src="./logo.png">
+  <img src="logo.png">
 </div>
 
-<!-- HEADER COM MENU -->
-<header>
-  <span>📦 Estoque</span>
+<div class="header">
+  <div>📦 Estoque</div>
 
-  <div class="menu-box">
-    <button onclick="toggleMenu()" style="background:none;border:none;color:white;font-size:20px;">
-      ⋮
-    </button>
-
-    <div id="menu" class="menu-dropdown">
-      <div onclick="exportData()">📤 Exportar</div>
-      <div onclick="triggerImport()">📥 Importar</div>
+  <div class="menu">
+    <button class="menu-btn" onclick="toggleMenu()">⋮</button>
+    <div id="menu" class="menu-content">
+      <button onclick="exportData()">Exportar</button>
+      <button onclick="document.getElementById('fileInput').click()">Importar</button>
     </div>
   </div>
-</header>
+</div>
 
-<!-- INPUT ESCONDIDO -->
-<input type="file" id="fileInput" style="display:none;" onchange="importData(event)">
+<input type="file" id="fileInput" style="display:none" onchange="importData(event)">
+
+<div class="dashboard">
+  <div class="card-info">
+    <h3 id="total">0</h3>
+    <p>Total de itens</p>
+  </div>
+</div>
 
 <div id="list"></div>
 
@@ -202,22 +224,21 @@ input, button {
 <script>
 let db = JSON.parse(localStorage.getItem("estoque") || "[]");
 
+function save() {
+  localStorage.setItem("estoque", JSON.stringify(db));
+}
+
 /* MENU */
 function toggleMenu() {
   const menu = document.getElementById("menu");
   menu.style.display = menu.style.display === "block" ? "none" : "block";
 }
 
-function triggerImport() {
-  document.getElementById("fileInput").click();
-}
-
 /* EXPORT */
 function exportData() {
-  const blob = new Blob([JSON.stringify(db)], { type: "application/json" });
-  const url = URL.createObjectURL(blob);
+  const blob = new Blob([JSON.stringify(db)], {type:"application/json"});
   const a = document.createElement("a");
-  a.href = url;
+  a.href = URL.createObjectURL(blob);
   a.download = "estoque.json";
   a.click();
 }
@@ -225,37 +246,21 @@ function exportData() {
 /* IMPORT */
 function importData(event) {
   const file = event.target.files[0];
-  if (!file) return;
-
   const reader = new FileReader();
 
-  reader.onload = function(e) {
-    try {
-      const data = JSON.parse(e.target.result);
-
-      if (!Array.isArray(data)) return alert("Arquivo inválido");
-
-      if (confirm("Substituir estoque atual?")) {
-        db = data;
-        save();
-        render();
-        alert("Importado com sucesso!");
-      }
-
-    } catch {
-      alert("Erro ao importar");
+  reader.onload = e => {
+    const data = JSON.parse(e.target.result);
+    if(confirm("Substituir estoque atual?")) {
+      db = data;
+      save();
+      render();
     }
   };
 
   reader.readAsText(file);
-  event.target.value = "";
 }
 
-/* CORE */
-function save() {
-  localStorage.setItem("estoque", JSON.stringify(db));
-}
-
+/* ADD */
 function openAdd() {
   document.getElementById("addModal").style.display = "flex";
 }
@@ -280,65 +285,74 @@ function add() {
     closeAdd();
   };
 
-  if (file) reader.readAsDataURL(file);
+  if(file) reader.readAsDataURL(file);
   else reader.onload();
 }
 
+/* LISTA */
 function render() {
   const list = document.getElementById("list");
-  list.innerHTML = db.length ? "" : "<p style='text-align:center;'>Sem produtos</p>";
+  const total = document.getElementById("total");
+
+  list.innerHTML = "";
+
+  let soma = 0;
 
   db.forEach(p => {
+    soma += p.qty;
+
     list.innerHTML += `
       <div class="list-item" onclick="openModal(${p.id})">
         ${p.image ? `<img src="${p.image}">` : ""}
+
         <div class="info">
           <b>${p.name}</b>
           <p>Qtd: ${p.qty}</p>
         </div>
+
         <div class="qtd-buttons">
-          <button onclick="event.stopPropagation(); increase(${p.id})">+</button>
-          <button onclick="event.stopPropagation(); decrease(${p.id})">-</button>
+          <button onclick="event.stopPropagation(); inc(${p.id})">+</button>
+          <button onclick="event.stopPropagation(); dec(${p.id})">-</button>
         </div>
       </div>
     `;
   });
+
+  total.innerText = soma;
 }
 
-function increase(id) {
-  db = db.map(p => (p.id === id ? {...p, qty: p.qty + 1} : p));
+/* QTD */
+function inc(id) {
+  db.find(p => p.id === id).qty++;
   save();
   render();
 }
 
-function decrease(id) {
-  db = db.map(p => (p.id === id && p.qty > 0 ? {...p, qty: p.qty - 1} : p));
+function dec(id) {
+  let p = db.find(p => p.id === id);
+  if(p.qty > 0) p.qty--;
   save();
   render();
 }
 
-function removeItem(id) {
-  db = db.filter(p => p.id !== id);
-  save();
-  render();
-}
-
+/* MODAL */
 function openModal(id) {
-  const p = db.find(i => i.id === id);
+  const p = db.find(p => p.id === id);
 
   document.getElementById("modal").style.display = "flex";
+
   document.getElementById("modalContent").innerHTML = `
-    ${p.image ? `<img src="${p.image}" style="width:100%;">` : ""}
+    ${p.image ? `<img src="${p.image}" style="width:100%">` : ""}
     <h2>${p.name}</h2>
 
-    <div style="display:flex;justify-content:center;gap:10px;">
-      <button onclick="increase(${p.id}); openModal(${p.id})">➕</button>
+    <div style="display:flex; justify-content:center; gap:10px;">
+      <button onclick="inc(${p.id}); openModal(${p.id})">+</button>
       <b>${p.qty}</b>
-      <button onclick="decrease(${p.id}); openModal(${p.id})">➖</button>
+      <button onclick="dec(${p.id}); openModal(${p.id})">-</button>
     </div>
 
-    <button onclick="confirmDelete(${p.id})" style="background:red;color:white;">
-      🗑 Deletar
+    <button onclick="confirmDelete(${p.id})" style="background:red;color:white;margin-top:10px;">
+      Deletar
     </button>
   `;
 }
@@ -348,14 +362,17 @@ function closeModal() {
 }
 
 function confirmDelete(id) {
-  if (confirm("Tem certeza?")) {
-    removeItem(id);
+  if(confirm("Tem certeza?")) {
+    db = db.filter(p => p.id !== id);
+    save();
+    render();
     closeModal();
   }
 }
 
 render();
 
+/* SW */
 if ("serviceWorker" in navigator) {
   navigator.serviceWorker.register("sw.js");
 }
