@@ -70,6 +70,21 @@ img {
   width: 100%;
   border-radius: 8px;
 }
+
+/* NOVO - botões de quantidade */
+.qtd-control {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  margin: 10px 0;
+}
+
+.qtd-control button {
+  width: 40px;
+  padding: 5px;
+  font-size: 18px;
+}
 </style>
 </head>
 
@@ -142,11 +157,35 @@ function render() {
       <div class="card">
         ${p.image ? `<img src="${p.image}">` : ""}
         <b>${p.name}</b>
-        <p>Qtd: ${p.qty}</p>
+
+        <div class="qtd-control">
+          <button onclick="decrease(${p.id})">➖</button>
+          <span><b>${p.qty}</b></span>
+          <button onclick="increase(${p.id})">➕</button>
+        </div>
+
         <button onclick="removeItem(${p.id})">Remover</button>
       </div>
     `;
   });
+}
+
+function increase(id) {
+  db = db.map(p => {
+    if (p.id === id) p.qty++;
+    return p;
+  });
+  save();
+  render();
+}
+
+function decrease(id) {
+  db = db.map(p => {
+    if (p.id === id && p.qty > 0) p.qty--;
+    return p;
+  });
+  save();
+  render();
 }
 
 function removeItem(id) {
