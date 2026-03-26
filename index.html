@@ -1,6 +1,10 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
+  <div style="padding:10px;">
+  <button onclick="exportData()">📤 Exportar Estoque</button>
+  <input type="file" onchange="importData(event)">
+</div>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Estoque</title>
@@ -170,6 +174,47 @@ input, button {
 </div>
 
 <script>
+  function importData(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+
+  const reader = new FileReader();
+
+  reader.onload = function(e) {
+    try {
+      const imported = JSON.parse(e.target.result);
+
+      if (!Array.isArray(imported)) {
+        alert("Arquivo inválido");
+        return;
+      }
+
+      if (confirm("Isso vai substituir seu estoque atual. Continuar?")) {
+        db = imported;
+        save();
+        render();
+      }
+
+    } catch {
+      alert("Erro ao importar arquivo");
+    }
+  };
+
+  reader.readAsText(file);
+}
+  function exportData() {
+  const dataStr = JSON.stringify(db, null, 2);
+
+  const blob = new Blob([dataStr], { type: "application/json" });
+  const url = URL.createObjectURL(blob);
+
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = "estoque.json";
+  a.click();
+
+  URL.revokeObjectURL(url);
+}
 let db = JSON.parse(localStorage.getItem("estoque") || "[]");
 
 function save() {
